@@ -10,19 +10,55 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const username =  request.headers['username']
+  const foundUser =  users.find(user => user.username === username)
+  if (!foundUser) {
+    return response.status(404).json({message: 'user not  found'})
+  }
+  request.user = foundUser
+  return next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { todos, pro } = request.user
+  if (!pro && todos.length>=10) {
+    return response.status(403).json({message: 'free tier quota exceeded'})
+  }
+  return next()
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+
+  const username = request.headers['username']
+  const { id: todoId } = request.params
+
+  if (!validate(todoId)) {
+    return response.status(400).json({error: 'invalid todo id'})
+  }
+
+  const foundUser = users.find(user => user.username === username)
+
+  if (!foundUser) {
+    return response.status(404).json({error: 'user not found'})
+  }
+
+  const foundTodo = foundUser.todos.find(todo => todo.id === todoId)
+  if(!foundTodo) {
+    return response.status(404).json({error: 'todo not found'})
+  }
+  request.todo = foundTodo
+  request.user = foundUser
+  return next()
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id: userId } = request.params
+  const foundUser =  users.find(user => user.id === userId)
+  if (!foundUser) {
+    return response.status(404).json({error: 'user not found'})
+  }
+  request.user = foundUser
+  return next()
 }
 
 app.post('/users', (request, response) => {
